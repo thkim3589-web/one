@@ -1,4 +1,4 @@
-const CACHE_NAME = "eng-sheet-app-v1";
+const CACHE_NAME = "eng-sheet-app-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -27,15 +27,14 @@ self.addEventListener("activate", (event)=>{
   self.clients.claim();
 });
 
+// 네트워크 우선: 온라인이면 항상 최신 파일을 받아오고 캐시도 갱신한다.
+// 오프라인일 때만 예전에 캐시된 버전을 사용한다.
 self.addEventListener("fetch", (event)=>{
   event.respondWith(
-    caches.match(event.request).then((cached)=>{
-      if(cached) return cached;
-      return fetch(event.request).then((resp)=>{
-        const copy = resp.clone();
-        caches.open(CACHE_NAME).then((cache)=> cache.put(event.request, copy)).catch(()=>{});
-        return resp;
-      }).catch(()=> cached);
-    })
+    fetch(event.request).then((resp)=>{
+      const copy = resp.clone();
+      caches.open(CACHE_NAME).then((cache)=> cache.put(event.request, copy)).catch(()=>{});
+      return resp;
+    }).catch(()=> caches.match(event.request))
   );
 });
