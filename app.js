@@ -496,21 +496,70 @@ async function exportExcel(){
 
     const outBuf = await wb.xlsx.writeBuffer();
     const blob = new Blob([outBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const url = URL.createObjectURL(blob);
     const safeName = (state.cells["B3"] || "현장ENG").replace(/[\\/:*?"<>|]/g, "_").slice(0, 60);
     const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${safeName}_${today}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 5000);
-    showToast("엑셀 다운로드 완료");
+    const filename = `${safeName}_${today}.xlsx`;
+
+    await deliverFile(blob, filename);
   }catch(err){
     console.error(err);
     alert("엑셀 생성 중 오류가 발생했습니다: " + err.message);
   }
+}
+
+/* 네이버/카카오 등 인앱 브라우저는 blob 다운로드를 막는 경우가 많아
+   여러 방식을 순서대로 시도하고, 항상 수동으로 열 수 있는 링크도 남겨둔다. */
+async function deliverFile(blob, filename){
+  const url = URL.createObjectURL(blob);
+
+  // 수동 폴백 링크는 성공 여부와 무관하게 항상 준비해둔다.
+  const fb = document.getElementById("exportFallback");
+  if(fb){
+    fb.innerHTML = "";
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.target = "_blank";
+    link.textContent = "⬇ 다운로드가 안 되면 여기를 눌러주세요";
+    link.style.display = "inline-block";
+    link.style.marginTop = "4px";
+    link.style.color = "#0F2A4A";
+    link.style.fontWeight = "700";
+    link.style.textDecoration = "underline";
+    fb.appendChild(link);
+  }
+
+  // 1) Web Share API (파일 공유 지원 브라우저) - 인앱 브라우저에서 가장 안정적
+  try{
+    const file = new File([blob], filename, { type: blob.type });
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      await navigator.share({ files:[file], title: filename });
+      showToast("공유 시트에서 저장을 완료해주세요");
+      return;
+    }
+  }catch(shareErr){
+    // 사용자가 공유를 취소한 경우 등은 무시하고 다음 방식 시도
+  }
+
+  // 2) 표준 a[download] 클릭
+  try{
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast("엑셀 다운로드를 시작했어요");
+  }catch(clickErr){
+    // 3) 새 탭에서 열기 (여기서도 막히면 위의 수동 링크를 눌러야 함)
+    try{
+      window.open(url, "_blank");
+      showToast("새 탭에서 파일을 열었어요");
+    }catch(openErr){
+      showToast("자동 다운로드 실패 - 아래 링크를 눌러주세요");
+    }
+  }
+  setTimeout(()=> URL.revokeObjectURL(url), 60000);
 }
 
 document.getElementById("btnExport").addEventListener("click", exportExcel);
