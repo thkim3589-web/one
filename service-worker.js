@@ -4,7 +4,9 @@ const ASSETS = [
   "./index.html",
   "./app.js",
   "./manifest.json",
-  "./icon.svg",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-180.png",
   "./template.xlsx",
   "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js",
 ];
