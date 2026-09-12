@@ -5,17 +5,17 @@ const TEMPLATE_URL = "template.xlsx";
 const DRAFT_KEY = "engSheetDraft_v1";
 const MAX_PHOTOS = 9;
 
-// 공문 및 사진 시트의 사진 삽입 영역(9칸) + 설명 입력 셀
+// 공문 및 사진 시트의 사진 삽입 영역(9칸) + 슬롯당 제목/유형/설명 입력 셀
 const PHOTO_SLOTS = [
-  { range: "B41:I76",  labelCell: "B78",  captionCell: "D78" },
-  { range: "K41:R76",  labelCell: "K78",  captionCell: "M78" },
-  { range: "T41:AA76", labelCell: "T78",  captionCell: "V78" },
-  { range: "B80:I115", labelCell: "B117", captionCell: "D117" },
-  { range: "K80:R115", labelCell: "K117", captionCell: "M117" },
-  { range: "T80:AA115",labelCell: "T117", captionCell: "V117" },
-  { range: "B119:I154",labelCell: "B156", captionCell: "D156" },
-  { range: "K119:R154",labelCell: "K156", captionCell: "M156" },
-  { range: "T119:AA154",labelCell: "T156",captionCell: "V156" },
+  { range: "B41:I76",   titleCell: "D77",  typeCell: "H77",  descCell: "D78" },
+  { range: "K41:R76",   titleCell: "M77",  typeCell: "Q77",  descCell: "M78" },
+  { range: "T41:AA76",  titleCell: "V77",  typeCell: "Z77",  descCell: "V78" },
+  { range: "B80:I115",  titleCell: "D116", typeCell: "H116", descCell: "D117" },
+  { range: "K80:R115",  titleCell: "M116", typeCell: "Q116", descCell: "M117" },
+  { range: "T80:AA115", titleCell: "V116", typeCell: "Z116", descCell: "V117" },
+  { range: "B119:I154", titleCell: "D155", typeCell: "H155", descCell: "D156" },
+  { range: "K119:R154", titleCell: "M155", typeCell: "Q155", descCell: "M156" },
+  { range: "T119:AA154",titleCell: "V155", typeCell: "Z155", descCell: "V156" },
 ];
 
 function pair(cCell, dCell, label){
@@ -484,13 +484,9 @@ async function exportExcel(){
         const slot = PHOTO_SLOTS[i];
         const imgId = wb.addImage({ base64: p.dataUrl, extension: "jpeg" });
         wsPhoto.addImage(imgId, slot.range);
-        const caption = [
-          p.title ? `제목: ${p.title}` : "",
-          p.ptype ? `유형: ${p.ptype}` : "",
-          p.ref ? `근거: ${p.ref}` : "",
-        ].filter(Boolean).join(" / ");
-        wsPhoto.getCell(slot.labelCell).value = "사진 설명";
-        wsPhoto.getCell(slot.captionCell).value = caption;
+        wsPhoto.getCell(slot.titleCell).value = p.title || "";
+        wsPhoto.getCell(slot.typeCell).value = p.ptype || "";
+        wsPhoto.getCell(slot.descCell).value = p.ref || "";
       });
     }
 
