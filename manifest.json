@@ -1,0 +1,11 @@
+{
+  "name": "현장 ENG시트 입력",
+  "short_name": "ENG시트",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F2F4F7",
+  "theme_color": "#0F2A4A",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
